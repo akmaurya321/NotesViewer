@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>My Notes — Notes Viewer</title>
+  <meta name="description" content="List of your uploaded notes. Open, copy share link, or delete." />
+  <link rel="icon" href="data:,">
+  <style>
+    :root{--bg:#071320;--card:rgba(255,255,255,0.03);--muted:#9aa6bf;--accent:#0ea5e9}
+    html,body{height:100%;margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;background:linear-gradient(180deg,#071320,#04101a);color:#e8f3ff}
+    .wrap{min-height:100%;display:flex;align-items:center;justify-content:center;padding:32px}
+    .card{width:820px;max-width:96%;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:14px;padding:22px;box-shadow:0 10px 40px rgba(2,6,23,0.8);border:1px solid rgba(255,255,255,0.04)}
+    h1{margin:0 0 6px 0;font-size:20px}
+    .tiny{font-size:13px;color:var(--muted)}
+    .controls{display:flex;gap:8px;align-items:center;margin-top:10px}
+    .btn{background:rgba(255,255,255,0.06);border-radius:10px;padding:8px 12px;border:1px solid rgba(255,255,255,0.06);cursor:pointer}
+    .list{margin-top:14px;display:flex;flex-direction:column;gap:8px;max-height:52vh;overflow:auto;padding-right:6px}
+    .note{display:flex;justify-content:space-between;align-items:center;background:rgba(255,255,255,0.02);padding:10px;border-radius:10px}
+    .note .meta{display:flex;flex-direction:column}
+    .note .meta strong{font-size:14px}
+    .note .meta small{color:var(--muted)}
+    .note .actions{display:flex;gap:8px}
+    .muted{color:var(--muted)}
+    a.link{color:var(--accent);text-decoration:none}
+    footer{margin-top:12px;text-align:right}
+    @media (max-width:640px){.card{padding:14px}.list{max-height:60vh}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <h1>My Notes</h1>
+          <div class="tiny">Files you uploaded with your Google account. Only you can see them here.</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <a class="link" href="/">← Back to Viewer</a>
+        </div>
+      </div>
+
+      <div style="margin-top:12px;display:flex;gap:8px;align-items:center" id="authRow">
+        <button id="signBtn" class="btn">Sign in with Google</button>
+        <div id="userInfo" class="muted"></div>
+      </div>
+
+      <div class="list" id="notesList">
+        <div class="muted">Sign in to see your uploaded notes.</div>
+      </div>
+
+      <div id="emptyNotice" class="muted" style="display:none;margin-top:8px">You have no uploads yet. Use Upload & Share to add notes.</div>
+
+      <footer>
+        <div class="tiny">Notes are stored in Firebase Storage and synced into the repo. You can delete your notes from here; deletions will be synced.</div>
+      </footer>
+    </div>
+  </div>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+  <script>
+    // ===== Replace with your Firebase config =====
+    const firebaseConfig = {
+      apiKey: "REPLACE_ME",
+      authDomain: "REPLACE_ME.firebaseapp.com",
+      projectId: "REPLACE_ME",
+      storageBucket: "REPLACE_ME.appspot.com",
+      messagingSenderId: "REPLACE_ME",
+      appId: "REPLACE_ME"
+    };
+    // ============================================
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+    const storage = firebase.storage();
+
+    const signBtn = document.getElementById('signBtn');
+    const userInfo = document.getElementById('userInfo');
+    const notesList = document.getElementById('notesList');
+    const emptyNotice = document.getElementById('emptyNotice');
+
+    let currentUser = null;
+    auth.onAuthStateChanged(user=>{ currentUser = user; updateUI(); if(user) loadNotes(); });
+
+    function updateUI(){
+      if(currentUser){ signBtn.textContent = 'Sign out'; userInfo.textContent = currentUser.displayName || currentUser.email; } else { signBtn.textContent = 'Sign in with Google'; userInfo.textContent = ''; notesList.innerHTML = '<div class="muted">Sign in to see your uploaded notes.</div>'; }
+    }
+
+    signBtn.addEventListener('click', async ()=>{
+      if(currentUser) return auth.signOut();
+      const provider = new firebase.auth.GoogleAuthProvider();
+      try{ await auth.signInWithPopup(provider); }catch(e){ alert('Sign-in failed: '+e.message); }
+    });
+
+    async function loadNotes(){
+      notesList.innerHTML = '<div class="muted">Loading…</div>';
+      try{
+        const q = await db.collection('uploads').where('owner','==',currentUser.uid).orderBy('createdAt','desc').get();
+        if(q.empty){ notesList.innerHTML=''; emptyNotice.style.display='block'; return; }
+        emptyNotice.style.display='none'; notesList.innerHTML='';
+        q.forEach(doc=>{
+          const d = doc.data();
+          const el = document.createElement('div'); el.className='note';
+          const meta = document.createElement('div'); meta.className='meta'; meta.innerHTML = `<strong>${d.filename}</strong><small>${d.createdAt && d.createdAt.toDate ? d.createdAt.toDate().toLocaleString() : ''}</small>`;
+          const actions = document.createElement('div'); actions.className='actions';
+          const open = document.createElement('button'); open.className='btn'; open.textContent='Open'; open.onclick = ()=>{ window.open(`${location.origin.replace(/\/pages\/.*$/,'') || location.origin}${location.pathname.replace(/[^/]*$/,'')}?file=${encodeURIComponent(d.publicUrl)}`,'_blank'); };
+          const copy = document.createElement('button'); copy.className='btn'; copy.textContent='Copy'; copy.onclick = ()=>{ navigator.clipboard.writeText(`${location.origin.replace(/\/pages\/.*$/,'') || location.origin}${location.pathname.replace(/[^/]*$/,'')}?file=${encodeURIComponent(d.publicUrl)}`).then(()=>{ copy.textContent='Copied'; setTimeout(()=>copy.textContent='Copy',1200); }); };
+          const del = document.createElement('button'); del.className='btn'; del.textContent='Delete'; del.onclick = async ()=>{
+            if(!confirm('Delete this file?')) return; try{ await db.collection('uploads').doc(doc.id).delete(); // note: storage deletion handled by admin action
+              el.remove();
+            }catch(e){ alert('Delete failed'); }
+          };
+          actions.appendChild(open); actions.appendChild(copy); actions.appendChild(del);
+          el.appendChild(meta); el.appendChild(actions);
+          notesList.appendChild(el);
+        });
+      }catch(e){ notesList.innerHTML = '<div class="muted">Failed to load notes</div>'; console.error(e); }
+    }
+  </script>
+</body>
+</html>
