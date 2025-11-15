@@ -46,7 +46,7 @@
         <div id="uidMsg" class="muted" style="margin-top:6px"></div>
       </div>
 
-      <!-- SIGNED IN STATUS -->
+      <!-- SIGNED IN -->
       <div id="loginBox" style="margin-top:10px;display:none">
         <div class="muted">Signed in as <span id="showUid"></span></div>
       </div>
@@ -86,7 +86,7 @@
 <script>
 const API = "https://notesviewerbackend.onrender.com";
 
-// LOCAL LOGIN
+/* -------------------- LOGIN STORAGE -------------------- */
 let userId = localStorage.getItem("nv_userId");
 let token  = localStorage.getItem("nv_token");
 
@@ -95,8 +95,19 @@ const checkBtn = document.getElementById("checkBtn");
 const uidMsg   = document.getElementById("uidMsg");
 const loginBox = document.getElementById("loginBox");
 const showUid  = document.getElementById("showUid");
-const uploadBtn = document.getElementById("uploadBtn");
-const fileInput = document.getElementById("fileInput");
+
+const uploadBtn  = document.getElementById("uploadBtn");
+const fileInput  = document.getElementById("fileInput");
+
+const progressWrap = document.getElementById("progressWrap");
+const pbar         = document.getElementById("pbar");
+const progressText = document.getElementById("progressText");
+
+const result     = document.getElementById("result");
+const shareInput = document.getElementById("shareInput");
+const copyBtn    = document.getElementById("copyBtn");
+const openBtn    = document.getElementById("openBtn");
+const closeBtn   = document.getElementById("closeBtn");
 
 function refreshLogin(){
   if(userId && token){
@@ -106,16 +117,21 @@ function refreshLogin(){
 }
 refreshLogin();
 
-// CHECK availability
+/* -------------------- CHECK USER ID -------------------- */
 checkBtn.onclick = async ()=>{
   const u = uidInput.value.trim();
   if(!u) return;
+
+  uidMsg.style.color = "#9aa6bf";
   uidMsg.textContent = "Checking...";
+
   const r = await fetch(`${API}/check/${u}`);
   const j = await r.json();
+
   if(j.available){
     uidMsg.style.color = "#00d97e";
-    uidMsg.textContent = "Available ✓ Creating user...";
+    uidMsg.textContent = "Available ✓ Creating account...";
+
     registerUser(u);
   } else {
     uidMsg.style.color = "red";
@@ -123,7 +139,7 @@ checkBtn.onclick = async ()=>{
   }
 };
 
-// REGISTER
+/* -------------------- REGISTER USER -------------------- */
 async function registerUser(u){
   const r = await fetch(`${API}/register`, {
     method:"POST",
@@ -131,13 +147,16 @@ async function registerUser(u){
     body:JSON.stringify({ userId: u })
   });
   const j = await r.json();
+
   if(j.success){
     localStorage.setItem("nv_userId", j.userId);
     localStorage.setItem("nv_token", j.token);
     userId = j.userId;
-    token = j.token;
+    token  = j.token;
+
     uidMsg.style.color = "#00d97e";
-    uidMsg.textContent = "Account created ✔ Auto-logged in.";
+    uidMsg.textContent = "Account created ✔";
+
     refreshLogin();
   } else {
     uidMsg.style.color = "red";
@@ -145,17 +164,17 @@ async function registerUser(u){
   }
 }
 
-// UPLOAD
+/* -------------------- UPLOAD FILE -------------------- */
 uploadBtn.onclick = async ()=>{
   if(!userId || !token) return alert("Create username first.");
   const f = fileInput.files[0];
   if(!f) return alert("Select a file.");
 
-  const MAX = 10 * 1024 * 1024;
-  if(f.size > MAX) return alert("Max 10MB allowed");
+  if(f.size > 10*1024*1024) return alert("Max 10MB allowed");
 
   progressWrap.style.display = "block";
-  pbar.style.width = "0%";
+  pbar.style.width = "10%";
+  progressText.textContent = "Uploading...";
 
   const form = new FormData();
   form.append("file", f);
@@ -163,26 +182,32 @@ uploadBtn.onclick = async ()=>{
   form.append("token", token);
 
   const r = await fetch(`${API}/upload`, { method:"POST", body: form });
-
   const j = await r.json();
-  if(!j.success){ alert(j.error); progressWrap.style.display="none"; return; }
 
-  progressWrap.style.display="none";
-  result.style.display="block";
-  shareInput.value = `/?file=${encodeURIComponent(j.url)}`;
+  if(!j.success){
+    alert(j.error);
+    progressWrap.style.display = "none";
+    return;
+  }
+
+  pbar.style.width = "100%";
+  progressText.textContent = "Done ✔";
+
+  result.style.display = "block";
+  shareInput.value = `${location.origin}/?file=${encodeURIComponent(j.url)}`;
 };
 
-// COPY
+/* -------------------- COPY URL -------------------- */
 copyBtn.onclick = ()=>{
   navigator.clipboard.writeText(shareInput.value);
   copyBtn.textContent = "Copied!";
   setTimeout(()=>copyBtn.textContent="Copy",1200);
 };
 
-// OPEN
+/* -------------------- OPEN -------------------- */
 openBtn.onclick = ()=> window.open(shareInput.value, "_blank");
 
-// CLOSE
+/* -------------------- CLOSE -------------------- */
 closeBtn.onclick = ()=> result.style.display = "none";
 </script>
 
