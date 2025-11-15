@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Upload & Share — Notes Viewer</title>
+  <meta name="description" content="Upload notes (HTML/PDF/GIF/MP4/Images/Lottie) and get a share link for Notes Viewer." />
+  <link rel="icon" href="data:,">
+  <style>
+    :root{--bg:#071320;--card:rgba(255,255,255,0.03);--muted:#9aa6bf;--accent:#0ea5e9}
+    html,body{height:100%;margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;background:linear-gradient(180deg,#071320,#04101a);color:#e8f3ff}
+    .wrap{min-height:100%;display:flex;align-items:center;justify-content:center;padding:32px}
+    .card{width:720px;max-width:94%;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:14px;padding:26px;box-shadow:0 10px 40px rgba(2,6,23,0.8);border:1px solid rgba(255,255,255,0.04)}
+    h1{margin:0 0 8px 0;font-size:20px}
+    p.lead{margin:0 0 18px 0;color:var(--muted);font-size:14px}
+    .row{display:flex;gap:10px;align-items:center}
+    .input, .btn, .filebtn{border-radius:10px;padding:10px 14px;border:1px solid rgba(255,255,255,0.06);background:transparent;color:inherit}
+    .filebtn{cursor:pointer}
+    .btn{background:rgba(255,255,255,0.06);cursor:pointer;transition:all .18s;box-shadow:0 8px 30px rgba(2,6,23,0.6)}
+    .btn:hover{transform:translateY(-2px);background:rgba(255,255,255,0.08)}
+    .muted{color:var(--muted);font-size:13px}
+    .progress{height:8px;background:rgba(255,255,255,0.06);border-radius:8px;overflow:hidden;margin-top:12px}
+    .progress > div{height:100%;width:0;background:var(--accent);transition:width .2s}
+    .result{margin-top:14px;background:rgba(255,255,255,0.02);padding:10px;border-radius:8px;font-size:14px}
+    .small{font-size:13px;color:var(--muted)}
+    footer{margin-top:14px;text-align:right}
+    a.link{color:var(--accent);text-decoration:none}
+    .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+    .tiny{font-size:12px;color:var(--muted)}
+    @media (max-width:540px){.card{padding:16px} .row{flex-direction:column;align-items:stretch}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <div class="topbar">
+        <div>
+          <h1>Upload & Share</h1>
+          <div class="tiny">Upload a note and instantly get a share link to open in the viewer.</div>
+        </div>
+        <div>
+          <a class="link" href="/">← Back to Viewer</a>
+        </div>
+      </div>
+
+      <p class="lead">Sign in with Google to identify you. Files are stored temporarily and synced into the repo automatically (owner: your platform).</p>
+
+      <!-- Firebase config placeholder -->
+      <div style="margin-bottom:10px">
+        <label class="small">Google account</label>
+        <div style="display:flex;gap:8px;margin-top:6px">
+          <button id="signBtn" class="btn">Sign in with Google</button>
+          <div id="userInfo" class="muted" style="align-self:center"></div>
+        </div>
+      </div>
+
+      <div style="margin-top:12px">
+        <label class="small">Choose file</label>
+        <div style="display:flex;gap:8px;margin-top:8px;align-items:center">
+          <input id="fileInput" type="file" class="filebtn" />
+          <button id="uploadBtn" class="btn">Upload & Get Link</button>
+        </div>
+        <div class="small" style="margin-top:8px;color:var(--muted)">Allowed: .html .htm .pdf .mp4 .mov .webm .gif .apng .png .jpg .jpeg .json (Lottie). Max 10 MB</div>
+      </div>
+
+      <div id="progressWrap" style="display:none">
+        <div class="progress" style="margin-top:12px"><div id="pbar"></div></div>
+        <div class="small" id="progressText">Uploading 0%</div>
+      </div>
+
+      <div id="result" style="display:none" class="result">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div style="font-weight:600">Share link</div>
+          <div><button id="copyLink" class="btn">Copy</button></div>
+        </div>
+        <div style="margin-top:8px"><input id="shareInput" class="input" style="width:100%" readonly /></div>
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <button id="openViewer" class="btn">Open in Viewer</button>
+          <button id="closeResult" class="btn">Close</button>
+        </div>
+      </div>
+
+      <div id="message" class="small" style="margin-top:12px;color:var(--muted)"></div>
+
+      <footer>
+        <div class="small">Your uploads are associated with your Google account only. For privacy use a disposable account.</div>
+      </footer>
+    </div>
+  </div>
+
+  <!-- Firebase compat SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+  <script>
+  // ====== REPLACE WITH YOUR FIREBASE CONFIG BELOW ======
+  const firebaseConfig = {
+    apiKey: "REPLACE_ME",
+    authDomain: "REPLACE_ME.firebaseapp.com",
+    projectId: "REPLACE_ME",
+    storageBucket: "REPLACE_ME.appspot.com",
+    messagingSenderId: "REPLACE_ME",
+    appId: "REPLACE_ME"
+  };
+  // =====================================================
+
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const storage = firebase.storage();
+  const db = firebase.firestore();
+
+  const signBtn = document.getElementById('signBtn');
+  const userInfo = document.getElementById('userInfo');
+  const fileInput = document.getElementById('fileInput');
+  const uploadBtn = document.getElementById('uploadBtn');
+  const progressWrap = document.getElementById('progressWrap');
+  const pbar = document.getElementById('pbar');
+  const progressText = document.getElementById('progressText');
+  const result = document.getElementById('result');
+  const shareInput = document.getElementById('shareInput');
+  const copyLink = document.getElementById('copyLink');
+  const openViewer = document.getElementById('openViewer');
+  const closeResult = document.getElementById('closeResult');
+  const message = document.getElementById('message');
+
+  let currentUser = null;
+  auth.onAuthStateChanged(u=>{ currentUser = u; updateUI(); });
+
+  function updateUI(){
+    if(currentUser){ signBtn.textContent='Sign out'; userInfo.textContent = currentUser.displayName || currentUser.email; } else { signBtn.textContent='Sign in with Google'; userInfo.textContent=''; }
+  }
+
+  signBtn.addEventListener('click', async ()=>{
+    if(currentUser) return auth.signOut();
+    const p = new firebase.auth.GoogleAuthProvider();
+    try{ await auth.signInWithPopup(p); }catch(e){ alert('Sign-in failed: '+e.message); }
+  });
+
+  const MAX = 10 * 1024 * 1024; // 10 MB
+  const ALLOWED = ['html','htm','pdf','mp4','mov','webm','gif','apng','png','jpg','jpeg','json'];
+
+  uploadBtn.addEventListener('click', async ()=>{
+    if(!currentUser) return alert('Sign in with Google to upload');
+    const f = fileInput.files[0];
+    if(!f) return alert('Choose a file first');
+    if(f.size > MAX) return alert('File too large (max 10 MB)');
+    const ext = (f.name.split('.').pop()||'').toLowerCase();
+    if(!ALLOWED.includes(ext)) return alert('Unsupported file type');
+
+    message.textContent = '';
+    progressWrap.style.display = 'block';
+    pbar.style.width = '0%';
+    progressText.textContent = 'Uploading 0%';
+
+    const safeName = f.name.replace(/[^a-zA-Z0-9._-]/g,'_');
+    const path = `uploads/${currentUser.uid}/${Date.now()}_${safeName}`;
+    const ref = storage.ref(path);
+    const task = ref.put(f);
+
+    task.on('state_changed', snapshot=>{
+      const pct = Math.round((snapshot.bytesTransferred/snapshot.totalBytes)*100);
+      pbar.style.width = pct+'%';
+      progressText.textContent = `Uploading ${pct}%`;
+    }, err=>{ progressWrap.style.display='none'; alert('Upload failed: '+err.message); }, async ()=>{
+      const url = await task.snapshot.ref.getDownloadURL();
+      // write metadata to firestore
+      await db.collection('uploads').add({ owner: currentUser.uid, ownerEmail: currentUser.email, filename: safeName, storagePath: path, publicUrl: url, size: f.size, createdAt: firebase.firestore.FieldValue.serverTimestamp(), synced:false });
+      progressWrap.style.display = 'none';
+      shareInput.value = `${location.origin.replace(/\/pages\/.*$/,'') || location.origin}${location.pathname.replace(/[^/]*$/,'')}?file=${encodeURIComponent(url)}`;
+      result.style.display = 'block';
+      message.textContent = 'Uploaded successfully — copy link or open in viewer.';
+    });
+  });
+
+  copyLink.addEventListener('click', ()=>{ navigator.clipboard.writeText(shareInput.value).then(()=>{ copyLink.textContent='Copied'; setTimeout(()=>copyLink.textContent='Copy',1400); }); });
+  openViewer.addEventListener('click', ()=>{ window.open(shareInput.value,'_blank'); });
+  closeResult.addEventListener('click', ()=>{ result.style.display='none'; message.textContent=''; });
+  </script>
+</body>
+</html>
