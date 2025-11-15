@@ -131,7 +131,6 @@ checkBtn.onclick = async ()=>{
   if(j.available){
     uidMsg.style.color = "#00d97e";
     uidMsg.textContent = "Available ✓ Creating account...";
-
     registerUser(u);
   } else {
     uidMsg.style.color = "red";
@@ -194,7 +193,9 @@ uploadBtn.onclick = async ()=>{
   progressText.textContent = "Done ✔";
 
   result.style.display = "block";
-  shareInput.value = `${location.origin}/?file=${encodeURIComponent(j.url)}`;
+
+  /* FINAL FIX => Always load index.html viewer */
+  shareInput.value = `${location.origin}/index.html?file=${encodeURIComponent(j.url)}`;
 };
 
 /* -------------------- COPY URL -------------------- */
