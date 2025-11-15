@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Notes Viewer — host HTML / GIF / MP4 / Lottie</title>
+  <meta name="description" content="Simple viewer to host HTML notes (and GIF/APNG/MP4/Lottie) on GitHub Pages and share on LinkedIn." />
+  <link rel="icon" href="data:,"><style>
+  :root{--bg:#0f1724;--card:#0b1220;--muted:#9aa6bf;--accent:#7dd3fc}
+  *{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;background:linear-gradient(180deg,#071029 0%,#071320 100%);color:#e6eef8;min-height:100vh}
+  .wrap{max-width:1100px;margin:28px auto;padding:20px}
+  header{display:flex;gap:10px;align-items:center;justify-content:space-between;padding:6px 0;margin-bottom:4px}
+  h1{font-size:18px;margin:0}
+  .controls{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+  .btn{
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.18);
+  padding: 8px 14px;
+  border-radius: 14px;
+  backdrop-filter: none; /* no blur */
+  -webkit-backdrop-filter: none;
+  color: #e8f3ff;
+  font-weight: 500;
+  letter-spacing: 0.2px;
+  cursor: pointer;
+  transition: 0.25s ease;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+}
+.btn:hover{
+  background: rgba(255,255,255,0.12);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.3);
+}
+.btn:active{
+  transform: translateY(1px);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+}
+  .input{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:8px 12px;border-radius:10px;color:inherit;min-width:260px}
+  main{margin-top:0;display:block;width:100%;max-width:100%;padding:0}
+  .viewer{background:#061122;border-radius:0;padding:0;min-height:100vh;width:100%;height:100vh;display:flex;align-items:center;justify-content:center;overflow:auto}
+  iframe, video, img, .lottie-container{width:100%;height:100%;border:0;border-radius:8px}
+  .side{background:rgba(255,255,255,0.03);padding:12px;border-radius:12px}
+  label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+  small.note{color:var(--muted);display:block;margin-top:8px}
+  .list{max-height:260px;overflow:auto;margin-top:10px}
+  .list a{display:block;padding:8px;border-radius:8px;color:inherit;text-decoration:none}
+  .list a:hover{background:rgba(255,255,255,0.02)}
+  footer{margin-top:18px;color:var(--muted);font-size:13px}
+  .warn{background:#3b2a2a;padding:8px;border-radius:8px;color:#ffd8d8}
+  @media (max-width:980px){main{grid-template-columns:1fr} .side{order:2}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header style="display:flex;justify-content:space-between;align-items:flex-end;padding:10px 0;margin-bottom:10px">
+  <div style="display:flex;flex-direction:column;justify-content:flex-end">
+    <h1 style="font-size:22px;margin:0;">Notes Viewer</h1>
+  </div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end">
+    <button id="myNotesBtn" class="btn" onclick="location.href='mynotes.html'">My Notes</button>
+    <button id="uploadBtn" class="btn" onclick="location.href='upload.html'">Upload & Share</button>
+    <button id="downloadUnified" class="btn" style="display:flex;align-items:center;gap:6px"><span style="font-size:16px">⬇️</span> Download</button>
+    <button id="openNew" class="btn">Open in new tab</button>
+    <button id="copyUrl" class="btn">Copy URL</button>
+    <button id="linkedinShare" class="btn">LinkedIn</button>
+    <button id="toggleBorder" class="btn">Padding</button>
+  </div>
+</header>
+
+    <div class="controls" style="display:flex;flex-direction:column;gap:16px;margin-top:18px;width:100%">
+
+  <!-- FIRST ROW: ALL HEADER BUTTONS (already in header, so removed duplicate row here) -->
+
+  <!-- SECOND ROW: LOAD INPUT BELOW BUTTONS -->
+  <div style="width:100%;display:flex;gap:10px">
+    <input id="fileInput" class="input" style="flex:1" placeholder="Enter relative path or URL e.g. notes/my-note.html or assets/clip.mp4" />
+    <button id="loadBtn" class="btn">Load</button>
+  </div>
+</div>
+  
+<div id="downloadProgress" style="position:fixed;bottom:60px;right:24px;width:200px;height:6px;background:rgba(255,255,255,0.1);border-radius:6px;overflow:hidden;display:none;z-index:9999"><div id="dpBar" style="height:100%;width:0;background:#0ea5e9"></div></div>
+
+    <main>
+      <section class="viewer" id="viewer">
+        <div id="placeholder" style="text-align:center;opacity:0.9">
+          <div style="font-size:14px;margin-bottom:8px">No file loaded.</div>
+          <div style="font-size:13px;color:var(--muted)">Paste a relative path (hosted in this repo) or an absolute URL and click Load.</div>
+        </div>
+      </section>
+
+      
+    </main>
+
+    
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.10.2/lottie.min.js" integrity="sha512-mxq3hQG6n1xk8d2JGvQG0uZQ9z6o8qJ3S2u6L6R+SBg2jVx4l2lZ3H8yXg6Pj6R9nP1VQvS+8V0g1A3rX2yQw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+  <!-- Toast and download progress (controlled by JS) -->
+  <div id="toast" style="position:fixed;bottom:24px;right:24px;background:#0ea5e9;color:#042a3a;padding:10px 16px;border-radius:12px;font-size:14px;opacity:0;transition:opacity .4s;z-index:9999"></div>
+
+  <script>
+  // Cleaned viewer script — only attach listeners to existing elements
+
+  // Helper: parse ?file= query
+  function getQueryFile(){
+    const url = new URL(window.location.href);
+    return url.searchParams.get('file') || '';
+  }
+
+  const viewer = document.getElementById('viewer');
+  const placeholder = document.getElementById('placeholder');
+  const fileInput = document.getElementById('fileInput');
+  const loadBtn = document.getElementById('loadBtn');
+  const openNew = document.getElementById('openNew');
+  const copyUrl = document.getElementById('copyUrl');
+  const linkedinShare = document.getElementById('linkedinShare');
+  const toggleBorder = document.getElementById('toggleBorder');
+  const downloadBtn = document.getElementById('downloadUnified');
+  const dp = document.getElementById('downloadProgress');
+  const dpBar = document.getElementById('dpBar');
+  const toast = document.getElementById('toast');
+
+  // initial load from query
+  const initial = getQueryFile();
+  if(initial){ fileInput.value = initial; loadFile(initial); }
+
+  // Attach listeners (only to elements that exist)
+  if(loadBtn) loadBtn.addEventListener('click', ()=>{ if(fileInput.value) loadFile(fileInput.value.trim()); });
+  if(openNew) openNew.addEventListener('click', ()=>{ const url = buildShareURL(); window.open(url,'_blank'); });
+  if(copyUrl) copyUrl.addEventListener('click', ()=>{ navigator.clipboard.writeText(buildShareURL()).then(()=>alert('Share URL copied')); });
+  if(linkedinShare) linkedinShare.addEventListener('click', ()=>{ const share = encodeURIComponent(buildShareURL()); const url = `https://www.linkedin.com/sharing/share-offsite/?url=${share}`; window.open(url,'_blank'); });
+  if(toggleBorder) toggleBorder.addEventListener('click', ()=>{ viewer.style.padding = viewer.style.padding? '': '18px'; });
+
+  // Unified download: fetch resource, allow rename, show progress and toast
+  if(downloadBtn){
+    downloadBtn.addEventListener('click', async ()=>{
+      const path = fileInput.value.trim();
+      if(!path) return alert('No file loaded');
+      const url = resolveFilePath(path);
+      const defaultName = path.split('/').pop();
+      const newName = prompt('Enter file name:', defaultName) || defaultName;
+
+      dp.style.display = 'block'; dpBar.style.width = '0%';
+      try{
+        const response = await fetch(url);
+        if(!response.ok) throw new Error('Network response was not ok');
+        const reader = response.body.getReader();
+        const contentLength = +response.headers.get('Content-Length') || 0;
+        let received = 0;
+        const chunks = [];
+        while(true){
+          const {done, value} = await reader.read();
+          if(done) break;
+          chunks.push(value);
+          received += value.byteLength || value.length;
+          if(contentLength){ dpBar.style.width = Math.floor((received/contentLength)*100)+'%'; }
+        }
+        const blob = new Blob(chunks);
+        const blobUrl = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href = blobUrl; a.download = newName; a.click();
+        dp.style.display = 'none'; dpBar.style.width = '0%';
+        toast.textContent = 'Downloaded Successfully'; toast.style.opacity = '1'; setTimeout(()=>toast.style.opacity='0',2000);
+      }catch(e){ dp.style.display='none'; alert('Download failed: '+e.message); }
+    });
+  }
+
+  // Core loader and renderers
+  function loadFile(path){
+    placeholder && placeholder.remove();
+    clearViewer();
+    const resolved = resolveFilePath(path);
+    const ext = (path.split('.').pop()||'').toLowerCase();
+    if(ext === 'html' || ext === 'htm'){
+      renderIframe(resolved);
+    } else if(['mp4','mov','webm'].includes(ext)){
+      renderVideo(resolved);
+    } else if(['gif','apng','png','jpg','jpeg'].includes(ext)){
+      renderImage(resolved);
+    } else if(ext === 'json'){
+      fetch(resolved).then(r=>r.json()).then(obj=>{ renderLottie(obj); }).catch(()=>{ renderText(`Failed to load Lottie JSON: ${resolved}`); });
+    } else { renderIframe(resolved); }
+  }
+
+  function resolveFilePath(input){
+    if(/^https?:\/\//i.test(input)) return input;
+    if(input.startsWith('/')) return location.origin + input;
+    const base = new URL(location.href);
+    base.search = '';
+    if(base.pathname.endsWith('/')) return base.origin + base.pathname + input;
+    const pathParts = base.pathname.split('/').slice(0,-1).join('/') + '/';
+    return base.origin + pathParts + input;
+  }
+
+  function clearViewer(){ viewer.innerHTML = ''; }
+  function renderIframe(src){ const ifr = document.createElement('iframe'); ifr.src = src; ifr.style.width='100%'; ifr.style.height='100%'; viewer.appendChild(ifr); }
+  function renderVideo(src){ const v = document.createElement('video'); v.controls=true; v.autoplay=true; v.loop=true; v.playsInline=true; v.muted=true; const s=document.createElement('source'); s.src=src; v.appendChild(s); viewer.appendChild(v); }
+  function renderImage(src){ const img=document.createElement('img'); img.src=src; img.style.objectFit='contain'; viewer.appendChild(img); }
+  function renderLottie(obj){ clearViewer(); const cont=document.createElement('div'); cont.className='lottie-container'; viewer.appendChild(cont); lottie.loadAnimation({container:cont,renderer:'svg',loop:true,autoplay:true,animationData:obj}); }
+  function renderText(txt){ clearViewer(); const p=document.createElement('pre'); p.textContent=txt; p.style.whiteSpace='pre-wrap'; p.style.padding='12px'; p.style.color='var(--muted)'; viewer.appendChild(p); }
+
+  // Allow Enter to load
+  if(fileInput) fileInput.addEventListener('keydown', (e)=>{ if(e.key==='Enter') loadBtn.click(); });
+  </script>
+
+  <style>
+    #backBtn{
+      position:fixed;bottom:20px;right:20px;z-index:9999;
+      width:55px;height:55px;border-radius:50%;
+      background:#0ea5e9;color:white;border:none;
+      box-shadow:0 4px 12px rgba(0,0,0,0.3);
+      cursor:pointer;font-size:22px;
+      display:flex;align-items:center;justify-content:center;
+    }
+  </style>
+  <button id="backBtn" title="Return to LinkedIn">⟵</button>
+  <script>
+    const backBtn = document.getElementById('backBtn');
+    const params = new URL(window.location.href).searchParams;
+    const ref = params.get('ref');
+    if(!ref) backBtn.style.display = 'none';
+    backBtn.addEventListener('click',()=>{
+      if(ref) window.location.href = ref;
+    });
+  </script>
+
+  </body>
+</html>
+
