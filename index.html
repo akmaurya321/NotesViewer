@@ -32,7 +32,7 @@
       display:flex;align-items:center;justify-content:center;
       overflow:auto;border-radius:6px;
     }
-    iframe,video,img,.lottie-container{
+    iframe,video,img{
       width:100%;height:100%;border:0;border-radius:8px;
     }
   </style>
@@ -46,9 +46,8 @@
     <h1 style="margin:0;font-size:22px">Notes Viewer</h1>
 
     <div style="display:flex;gap:10px;flex-wrap:wrap">
-      <button class="btn" onclick="location.href='/pages/mynotes.html'">My Notes</button>
-      <button class="btn" onclick="location.href='/pages/upload.html'">  Upload & Share </button>
-
+      <button class="btn" onclick="location.href='pages/mynotes.html'">My Notes</button>
+      <button class="btn" onclick="location.href='pages/upload.html'">Upload & Share</button>
       <button id="downloadUnified" class="btn">⬇️ Download</button>
       <button id="openNew" class="btn">Open in new tab</button>
       <button id="copyUrl" class="btn">Copy URL</button>
@@ -74,16 +73,12 @@
 </div>
 
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.10.2/lottie.min.js"></script>
-
 <script>
-/* -------- READ FROM ?file= -------- */
 function getQueryFile(){
   const url = new URL(window.location.href);
   return url.searchParams.get("file") || "";
 }
 
-/* -------- DOM -------- */
 const viewer = document.getElementById("viewer");
 const placeholder = document.getElementById("placeholder");
 const fileInput = document.getElementById("fileInput");
@@ -94,7 +89,6 @@ const copyUrl = document.getElementById("copyUrl");
 const linkedinShare = document.getElementById("linkedinShare");
 const toggleBorder = document.getElementById("toggleBorder");
 
-/* -------- MAIN LOAD -------- */
 function loadFile(path){
   placeholder?.remove();
   viewer.innerHTML = "";
@@ -108,9 +102,8 @@ function loadFile(path){
   else renderIframe(resolved);
 }
 
-/* -------- PATH RESOLVER -------- */
 function resolvePath(input){
-  if(/^https?:\/\//.test(input)) return input;  
+  if(/^https?:\/\//.test(input)) return input;
   if(input.startsWith("/")) return location.origin + input;
 
   const base = location.href.split("?")[0];
@@ -118,7 +111,6 @@ function resolvePath(input){
   return folder + input;
 }
 
-/* -------- RENDERING -------- */
 function renderIframe(src){
   const f = document.createElement("iframe"); f.src = src;
   viewer.appendChild(f);
@@ -134,7 +126,6 @@ function renderImage(src){
   viewer.appendChild(img);
 }
 
-/* -------- EVENTS -------- */
 loadBtn.onclick = () => {
   if(fileInput.value.trim()) loadFile(fileInput.value.trim());
 };
@@ -163,7 +154,6 @@ toggleBorder.onclick = () => {
   viewer.style.padding = viewer.style.padding ? "" : "20px";
 };
 
-/* -------- DOWNLOAD FIX -------- */
 downloadBtn.onclick = async () => {
   if(!fileInput.value) return alert("No file loaded");
 
@@ -177,12 +167,10 @@ downloadBtn.onclick = async () => {
   a.click();
 };
 
-/* -------- CORRECT SHARE URL -------- */
 function buildLink(fileUrl){
   return location.origin + "/NotesViewer/index.html?file=" + encodeURIComponent(fileUrl);
 }
 
-/* -------- AUTO LOAD -------- */
 const initial = getQueryFile();
 if(initial){
   fileInput.value = initial;
