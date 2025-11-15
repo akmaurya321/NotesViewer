@@ -29,6 +29,7 @@
       border:1px solid rgba(255,255,255,0.06);
       cursor:pointer;
       transition:0.18s;
+      color:#e8f3ff;
     }
     .btn:hover{background:rgba(255,255,255,0.1)}
     .list{
@@ -51,12 +52,13 @@
 <div class="wrap">
   <div class="card">
 
+    <!-- FIXED BACK BUTTON -->
     <div style="display:flex;justify-content:space-between;align-items:center">
       <div>
         <h1>My Notes</h1>
         <div class="tiny">Notes uploaded by you.</div>
       </div>
-      <a class="link" href="/">← Back to Viewer</a>
+      <a class="link" href="../index.html">← Back to Viewer</a>
     </div>
 
     <div id="userRow" style="margin-top:12px;font-size:14px;color:var(--muted)"></div>
@@ -83,7 +85,7 @@ const notesList = document.getElementById("notesList");
 const emptyBox  = document.getElementById("empty");
 const userRow   = document.getElementById("userRow");
 
-/* ------------------ LOGIN CHECK ------------------ */
+/* LOGIN CHECK */
 if(!userId || !token){
   notesList.innerHTML = "<div class='tiny'>Please create an account first.</div>";
   userRow.innerHTML = `<span style="color:#f88">No account found.</span>`;
@@ -92,7 +94,7 @@ if(!userId || !token){
   loadNotes();
 }
 
-/* ------------------ LOAD NOTES LIST ------------------ */
+/* LOAD USER NOTES */
 async function loadNotes(){
   notesList.innerHTML = "<div class='tiny'>Loading…</div>";
 
@@ -130,27 +132,27 @@ async function loadNotes(){
       const actions = document.createElement("div");
       actions.className = "actions";
 
-      /* ---------------- OPEN ---------------- */
+      /* ---- OPEN ---- */
       const openBtn = document.createElement("button");
       openBtn.className = "btn";
       openBtn.textContent = "Open";
       openBtn.onclick = () => {
-        const viewer = `${location.origin}/index.html?file=${encodeURIComponent(f.download_url)}`;
+        const viewer = `${location.origin}/NotesViewer/index.html?file=${encodeURIComponent(f.download_url)}`;
         window.open(viewer, "_blank");
       };
 
-      /* ---------------- COPY ---------------- */
+      /* ---- COPY ---- */
       const copyBtn = document.createElement("button");
       copyBtn.className = "btn";
       copyBtn.textContent = "Copy";
       copyBtn.onclick = () => {
-        const viewer = `${location.origin}/index.html?file=${encodeURIComponent(f.download_url)}`;
+        const viewer = `${location.origin}/NotesViewer/index.html?file=${encodeURIComponent(f.download_url)}`;
         navigator.clipboard.writeText(viewer);
         copyBtn.textContent = "Copied!";
         setTimeout(()=>copyBtn.textContent="Copy",800);
       };
 
-      /* ---------------- DELETE ---------------- */
+      /* ---- DELETE ---- */
       const delBtn = document.createElement("button");
       delBtn.className = "btn";
       delBtn.textContent = "Delete";
@@ -166,7 +168,7 @@ async function loadNotes(){
   }
 }
 
-/* ------------------ DELETE FILE ------------------ */
+/* DELETE FILE */
 async function deleteFile(path, element){
   if(!confirm("Delete this note?")) return;
 
