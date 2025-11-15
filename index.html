@@ -3,141 +3,190 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Notes Viewer — host HTML / GIF / MP4 / Lottie</title>
-  <meta name="description" content="Simple viewer to host HTML notes (and GIF/APNG/MP4/Lottie) on GitHub Pages and share on LinkedIn." />
-  <link rel="icon" href="data:,">
+  <title>Notes Viewer — HTML / GIF / MP4 / Lottie</title>
+
   <style>
-  :root{--bg:#0f1724;--card:#0b1220;--muted:#9aa6bf;--accent:#7dd3fc}
-  *{box-sizing:border-box}
-  body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;background:linear-gradient(180deg,#071029 0%,#071320 100%);color:#e6eef8;min-height:100vh}
-  .wrap{max-width:1100px;margin:28px auto;padding:20px}
-  header{display:flex;gap:10px;align-items:center;justify-content:space-between;padding:6px 0;margin-bottom:4px}
-  h1{font-size:18px;margin:0}
-  .controls{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
-  .btn{
-    background: rgba(255,255,255,0.08);
-    border: 1px solid rgba(255,255,255,0.18);
-    padding: 8px 14px;
-    border-radius: 14px;
-    color: #e8f3ff;
-    cursor: pointer;
-    transition: 0.25s ease;
-    box-shadow: 0 4px 14px rgba(0,0,0,0.25);
-  }
-  .btn:hover{
-    background: rgba(255,255,255,0.12);
-    transform: translateY(-1px);
-    box-shadow: 0 6px 18px rgba(0,0,0,0.3);
-  }
-  .input{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:8px 12px;border-radius:10px;color:inherit;min-width:260px}
-  main{margin-top:0;width:100%;padding:0}
-  .viewer{background:#061122;border-radius:0;min-height:100vh;width:100%;height:100vh;display:flex;align-items:center;justify-content:center;overflow:auto}
-  iframe, video, img, .lottie-container{width:100%;height:100%;border:0;border-radius:8px}
+    :root{--bg:#0f1724;--card:#0b1220;--muted:#9aa6bf;--accent:#7dd3fc}
+    *{box-sizing:border-box}
+    body{
+      margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial;
+      background:linear-gradient(180deg,#071029,#071320);
+      color:#e6eef8;min-height:100vh;
+    }
+    .wrap{max-width:1100px;margin:28px auto;padding:20px}
+    .btn{
+      background:rgba(255,255,255,0.08);
+      border:1px solid rgba(255,255,255,0.18);
+      padding:8px 14px;border-radius:14px;
+      color:#e8f3ff;cursor:pointer;transition:.25s;
+      box-shadow:0 4px 14px rgba(0,0,0,0.25);
+    }
+    .btn:hover{background:rgba(255,255,255,0.12);transform:translateY(-1px)}
+    .input{
+      background:transparent;border:1px solid rgba(255,255,255,0.06);
+      padding:8px 12px;border-radius:10px;color:inherit;min-width:260px;
+    }
+    .viewer{
+      background:#061122;
+      min-height:100vh;height:100vh;
+      display:flex;align-items:center;justify-content:center;
+      overflow:auto;border-radius:6px;
+    }
+    iframe,video,img,.lottie-container{
+      width:100%;height:100%;border:0;border-radius:8px;
+    }
   </style>
+
 </head>
 <body>
-  <div class="wrap">
+<div class="wrap">
 
-<header style="display:flex;justify-content:space-between;align-items:flex-end;padding:10px 0;margin-bottom:10px">
-  <div><h1 style="font-size:22px;margin:0;">Notes Viewer</h1></div>
+  <!-- HEADER -->
+  <header style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:10px">
+    <h1 style="margin:0;font-size:22px">Notes Viewer</h1>
 
-  <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end">
-    <!-- ✔ FIXED PATHS -->
-    <button id="myNotesBtn" class="btn" onclick="location.href='pages/mynotes.html'">My Notes</button>
-    <button id="uploadBtn" class="btn" onclick="location.href='pages/upload.html'">Upload & Share</button>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn" onclick="location.href='pages/mynotes.html'">My Notes</button>
+      <button class="btn" onclick="location.href='pages/upload.html'">Upload & Share</button>
+      <button id="downloadUnified" class="btn">⬇️ Download</button>
+      <button id="openNew" class="btn">Open in new tab</button>
+      <button id="copyUrl" class="btn">Copy URL</button>
+      <button id="linkedinShare" class="btn">LinkedIn</button>
+      <button id="toggleBorder" class="btn">Padding</button>
+    </div>
+  </header>
 
-    <button id="downloadUnified" class="btn" style="display:flex;align-items:center;gap:6px"><span style="font-size:16px">⬇️</span> Download</button>
-    <button id="openNew" class="btn">Open in new tab</button>
-    <button id="copyUrl" class="btn">Copy URL</button>
-    <button id="linkedinShare" class="btn">LinkedIn</button>
-    <button id="toggleBorder" class="btn">Padding</button>
-  </div>
-</header>
-
-<div class="controls" style="display:flex;flex-direction:column;gap:16px;margin-top:18px;width:100%">
-  <div style="width:100%;display:flex;gap:10px">
-    <input id="fileInput" class="input" style="flex:1" placeholder="Enter relative path or URL e.g. notes/my-note.html or assets/clip.mp4" />
+  <!-- INPUT -->
+  <div style="display:flex;gap:10px; margin-bottom:20px">
+    <input id="fileInput" class="input" placeholder="Enter path or URL e.g. notes/user/file.html" style="flex:1">
     <button id="loadBtn" class="btn">Load</button>
   </div>
-</div>
 
-<div id="downloadProgress" style="position:fixed;bottom:60px;right:24px;width:200px;height:6px;background:rgba(255,255,255,0.1);border-radius:6px;overflow:hidden;display:none;z-index:9999">
-  <div id="dpBar" style="height:100%;width:0;background:#0ea5e9"></div>
-</div>
-
-<main>
+  <!-- VIEWER -->
   <section class="viewer" id="viewer">
     <div id="placeholder" style="text-align:center;opacity:0.9">
-      <div style="font-size:14px;margin-bottom:8px">No file loaded.</div>
-      <div style="font-size:13px;color:var(--muted)">Paste a relative path or a URL and click Load.</div>
+      <div>No file loaded.</div>
+      <div style="font-size:13px;color:var(--muted)">Paste a path or URL and click Load.</div>
     </div>
   </section>
-</main>
 
 </div>
+
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.10.2/lottie.min.js"></script>
 
-<div id="toast" style="position:fixed;bottom:24px;right:24px;background:#0ea5e9;color:#042a3a;padding:10px 16px;border-radius:12px;font-size:14px;opacity:0;transition:opacity .4s;z-index:9999"></div>
-
 <script>
+/* ------------------ READ FROM ?file= ------------------ */
 function getQueryFile(){
   const url = new URL(window.location.href);
-  return url.searchParams.get('file') || '';
+  return url.searchParams.get("file") || "";
 }
 
-const viewer = document.getElementById('viewer');
-const placeholder = document.getElementById('placeholder');
-const fileInput = document.getElementById('fileInput');
-const loadBtn = document.getElementById('loadBtn');
+/* ------------------ DOM ------------------ */
+const viewer = document.getElementById("viewer");
+const placeholder = document.getElementById("placeholder");
+const fileInput = document.getElementById("fileInput");
+const loadBtn = document.getElementById("loadBtn");
+const downloadBtn = document.getElementById("downloadUnified");
+const openNew = document.getElementById("openNew");
+const copyUrl = document.getElementById("copyUrl");
+const linkedinShare = document.getElementById("linkedinShare");
+const toggleBorder = document.getElementById("toggleBorder");
 
+/* ------------------ MAIN LOAD FUNCTION ------------------ */
 function loadFile(path){
-  placeholder && placeholder.remove();
-  viewer.innerHTML = '';
-  const resolved = resolveFilePath(path);
-  const ext = (path.split('.').pop()||'').toLowerCase();
+  placeholder?.remove();
+  viewer.innerHTML = "";
 
-  if(ext === 'html' || ext === 'htm') renderIframe(resolved);
-  else if(['mp4','mov','webm'].includes(ext)) renderVideo(resolved);
-  else if(['gif','png','jpg','jpeg','apng'].includes(ext)) renderImage(resolved);
+  const resolved = resolvePath(path);
+  const ext = (path.split(".").pop() || "").toLowerCase();
+
+  if(ext === "html" || ext === "htm") renderIframe(resolved);
+  else if(["mp4","webm","mov"].includes(ext)) renderVideo(resolved);
+  else if(["png","jpg","jpeg","gif","apng"].includes(ext)) renderImage(resolved);
   else renderIframe(resolved);
 }
 
-function resolveFilePath(input){
-  if(/^https?:\/\//i.test(input)) return input;
-  if(input.startsWith('/')) return location.origin + input;
+/* ------------------ PATH RESOLVER ------------------ */
+function resolvePath(input){
+  if(/^https?:\/\//.test(input)) return input; // full URL
+  if(input.startsWith("/")) return location.origin + input;
 
-  const base = new URL(location.href);
-  base.search = '';
-  const folder = base.pathname.split('/').slice(0,-1).join('/') + '/';
-  return base.origin + folder + input;
+  const base = location.href.split("?")[0];
+  const folder = base.substring(0, base.lastIndexOf("/") + 1);
+  return folder + input;
 }
 
-function renderIframe(src){ const el=document.createElement('iframe'); el.src=src; viewer.appendChild(el); }
-function renderVideo(src){ const v=document.createElement('video'); v.controls=true; v.src=src; viewer.appendChild(v); }
-function renderImage(src){ const i=document.createElement('img'); i.src=src; viewer.appendChild(i); }
-
-loadBtn.onclick = () => { if(fileInput.value) loadFile(fileInput.value.trim()); };
-</script>
-
-<style>
-#backBtn{
-  position:fixed;bottom:20px;right:20px;z-index:9999;
-  width:55px;height:55px;border-radius:50%;
-  background:#0ea5e9;color:white;border:none;
-  box-shadow:0 4px 12px rgba(0,0,0,0.3);
-  cursor:pointer;font-size:22px;
-  display:flex;align-items:center;justify-content:center;
+/* ------------------ RENDERING ------------------ */
+function renderIframe(src){
+  const f = document.createElement("iframe"); f.src = src;
+  viewer.appendChild(f);
 }
-</style>
+function renderVideo(src){
+  const v = document.createElement("video");
+  v.controls = true; v.src = src;
+  viewer.appendChild(v);
+}
+function renderImage(src){
+  const img = document.createElement("img");
+  img.src = src;
+  viewer.appendChild(img);
+}
 
-<button id="backBtn" title="Return to LinkedIn">⟵</button>
-<script>
-const backBtn = document.getElementById('backBtn');
-const params = new URL(window.location.href).searchParams;
-const ref = params.get('ref');
-if(!ref) backBtn.style.display = 'none';
-backBtn.onclick = () => { if(ref) window.location.href = ref; };
+/* ------------------ BUTTON EVENTS ------------------ */
+loadBtn.onclick = () => {
+  if(fileInput.value.trim()) loadFile(fileInput.value.trim());
+};
+
+openNew.onclick = () => {
+  if(!fileInput.value) return;
+  const u = buildLink(fileInput.value.trim());
+  window.open(u, "_blank");
+};
+
+copyUrl.onclick = () => {
+  if(!fileInput.value) return;
+  const u = buildLink(fileInput.value.trim());
+  navigator.clipboard.writeText(u);
+  copyUrl.textContent = "Copied!";
+  setTimeout(()=>copyUrl.textContent="Copy URL", 1000);
+};
+
+linkedinShare.onclick = () => {
+  if(!fileInput.value) return;
+  const u = encodeURIComponent(buildLink(fileInput.value.trim()));
+  window.open("https://www.linkedin.com/sharing/share-offsite/?url=" + u, "_blank");
+};
+
+toggleBorder.onclick = () => {
+  viewer.style.padding = viewer.style.padding ? "" : "20px";
+};
+
+/* ------------------ DOWNLOAD FIX (works for GitHub + external URLs) ------------------ */
+downloadBtn.onclick = async () => {
+  if(!fileInput.value) return alert("No file loaded");
+
+  const url = resolvePath(fileInput.value.trim());
+  const name = fileInput.value.trim().split("/").pop();
+
+  const blob = await fetch(url).then(r=>r.blob());
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  a.click();
+};
+
+/* ------------------ FULL SHARE URL BUILDER ------------------ */
+function buildLink(fileUrl){
+  return location.origin + "/?file=" + encodeURIComponent(fileUrl);
+}
+
+/* ------------------ AUTO OPEN FROM ?file ------------------ */
+const initial = getQueryFile();
+if(initial){
+  fileInput.value = initial;
+  loadFile(initial);
+}
 </script>
 
 </body>
