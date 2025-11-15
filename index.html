@@ -76,13 +76,13 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.10.2/lottie.min.js"></script>
 
 <script>
-/* ------------------ READ FROM ?file= ------------------ */
+/* -------- READ FROM ?file= -------- */
 function getQueryFile(){
   const url = new URL(window.location.href);
   return url.searchParams.get("file") || "";
 }
 
-/* ------------------ DOM ------------------ */
+/* -------- DOM -------- */
 const viewer = document.getElementById("viewer");
 const placeholder = document.getElementById("placeholder");
 const fileInput = document.getElementById("fileInput");
@@ -93,7 +93,7 @@ const copyUrl = document.getElementById("copyUrl");
 const linkedinShare = document.getElementById("linkedinShare");
 const toggleBorder = document.getElementById("toggleBorder");
 
-/* ------------------ MAIN LOAD FUNCTION ------------------ */
+/* -------- MAIN LOAD -------- */
 function loadFile(path){
   placeholder?.remove();
   viewer.innerHTML = "";
@@ -107,9 +107,9 @@ function loadFile(path){
   else renderIframe(resolved);
 }
 
-/* ------------------ PATH RESOLVER ------------------ */
+/* -------- PATH RESOLVER -------- */
 function resolvePath(input){
-  if(/^https?:\/\//.test(input)) return input; // full URL
+  if(/^https?:\/\//.test(input)) return input;  
   if(input.startsWith("/")) return location.origin + input;
 
   const base = location.href.split("?")[0];
@@ -117,7 +117,7 @@ function resolvePath(input){
   return folder + input;
 }
 
-/* ------------------ RENDERING ------------------ */
+/* -------- RENDERING -------- */
 function renderIframe(src){
   const f = document.createElement("iframe"); f.src = src;
   viewer.appendChild(f);
@@ -133,7 +133,7 @@ function renderImage(src){
   viewer.appendChild(img);
 }
 
-/* ------------------ BUTTON EVENTS ------------------ */
+/* -------- EVENTS -------- */
 loadBtn.onclick = () => {
   if(fileInput.value.trim()) loadFile(fileInput.value.trim());
 };
@@ -162,7 +162,7 @@ toggleBorder.onclick = () => {
   viewer.style.padding = viewer.style.padding ? "" : "20px";
 };
 
-/* ------------------ DOWNLOAD FIX (works for GitHub + external URLs) ------------------ */
+/* -------- DOWNLOAD FIX -------- */
 downloadBtn.onclick = async () => {
   if(!fileInput.value) return alert("No file loaded");
 
@@ -176,12 +176,12 @@ downloadBtn.onclick = async () => {
   a.click();
 };
 
-/* ------------------ FULL SHARE URL BUILDER ------------------ */
+/* -------- CORRECT SHARE URL -------- */
 function buildLink(fileUrl){
-  return location.origin + "/?file=" + encodeURIComponent(fileUrl);
+  return location.origin + "/NotesViewer/index.html?file=" + encodeURIComponent(fileUrl);
 }
 
-/* ------------------ AUTO OPEN FROM ?file ------------------ */
+/* -------- AUTO LOAD -------- */
 const initial = getQueryFile();
 if(initial){
   fileInput.value = initial;
