@@ -33,7 +33,7 @@
           <h1>Upload & Share</h1>
           <div class="muted">Upload your note & get a share link instantly.</div>
         </div>
-        <a href="/">← Back</a>
+        <a href="/NotesViewer/">← Back</a>
       </div>
 
       <!-- USER ACCOUNT -->
@@ -172,7 +172,7 @@ uploadBtn.onclick = async ()=>{
   if(f.size > 10*1024*1024) return alert("Max 10MB allowed");
 
   progressWrap.style.display = "block";
-  pbar.style.width = "10%";
+  pbar.style.width = "20%";
   progressText.textContent = "Uploading...";
 
   const form = new FormData();
@@ -191,11 +191,10 @@ uploadBtn.onclick = async ()=>{
 
   pbar.style.width = "100%";
   progressText.textContent = "Done ✔";
-
   result.style.display = "block";
 
-  /* FINAL FIX => Always load index.html viewer */
-  shareInput.value = `${location.origin}/index.html?file=${encodeURIComponent(j.url)}`;
+  /* FINAL FIX — CORRECT GITHUB PAGES PATH */
+  shareInput.value = `${location.origin}/NotesViewer/index.html?file=${encodeURIComponent(j.url)}`;
 };
 
 /* -------------------- COPY URL -------------------- */
