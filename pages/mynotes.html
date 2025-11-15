@@ -85,7 +85,7 @@ const userRow   = document.getElementById("userRow");
 
 /* ------------------ LOGIN CHECK ------------------ */
 if(!userId || !token){
-  notesList.innerHTML = "<div>Please create an account first.</div>";
+  notesList.innerHTML = "<div class='tiny'>Please create an account first.</div>";
   userRow.innerHTML = `<span style="color:#f88">No account found.</span>`;
 } else {
   userRow.innerHTML = `Logged in as <b>${userId}</b>`;
@@ -130,27 +130,27 @@ async function loadNotes(){
       const actions = document.createElement("div");
       actions.className = "actions";
 
-      // Open
+      /* ---------------- OPEN ---------------- */
       const openBtn = document.createElement("button");
       openBtn.className = "btn";
       openBtn.textContent = "Open";
       openBtn.onclick = () => {
-        const viewer = `${location.origin}/?file=${encodeURIComponent(f.download_url)}`;
+        const viewer = `${location.origin}/index.html?file=${encodeURIComponent(f.download_url)}`;
         window.open(viewer, "_blank");
       };
 
-      // Copy
+      /* ---------------- COPY ---------------- */
       const copyBtn = document.createElement("button");
       copyBtn.className = "btn";
       copyBtn.textContent = "Copy";
       copyBtn.onclick = () => {
-        const viewer = `${location.origin}/?file=${encodeURIComponent(f.download_url)}`;
+        const viewer = `${location.origin}/index.html?file=${encodeURIComponent(f.download_url)}`;
         navigator.clipboard.writeText(viewer);
         copyBtn.textContent = "Copied!";
-        setTimeout(()=>copyBtn.textContent="Copy",1000);
+        setTimeout(()=>copyBtn.textContent="Copy",800);
       };
 
-      // Delete
+      /* ---------------- DELETE ---------------- */
       const delBtn = document.createElement("button");
       delBtn.className = "btn";
       delBtn.textContent = "Delete";
